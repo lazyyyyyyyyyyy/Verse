@@ -6,6 +6,7 @@ local PlayerGui = Player:WaitForChild("PlayerGui")
 -- Create the GUI
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = PlayerGui
+ScreenGui.ResetOnSpawn = false -- Prevent GUI reset on respawn
 
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Parent = ScreenGui
@@ -27,5 +28,99 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed and input.KeyCode == Enum.KeyCode.Insert then
         GuiVisible = not GuiVisible
         ScreenGui.Enabled = GuiVisible
+    end
+end)
+
+-- ESP Functionality
+local Settings = {
+    Box_Color = Color3.fromRGB(0, 255, 255),
+    Tracer_Color = Color3.fromRGB(255, 0, 0),
+    Tracer_Thickness = 1,
+    Box_Thickness = 1,
+    Tracer_Origin = "Bottom",
+    Tracer_FollowMouse = false,
+    Tracers = false
+}
+local Team_Check = {
+    TeamCheck = false,
+    Green = Color3.fromRGB(0, 255, 0),
+    Red = Color3.fromRGB(255, 0, 0)
+}
+local TeamColor = true
+
+local camera = game:GetService("Workspace").CurrentCamera
+local mouse = Player:GetMouse()
+
+local function NewQuad(thickness, color)
+    local quad = Drawing.new("Quad")
+    quad.Visible = false
+    quad.Color = color
+    quad.Filled = false
+    quad.Thickness = thickness
+    quad.Transparency = 1
+    return quad
+end
+
+local function NewLine(thickness, color)
+    local line = Drawing.new("Line")
+    line.Visible = false
+    line.Color = color
+    line.Thickness = thickness
+    line.Transparency = 1
+    return line
+end
+
+local function Visibility(state, lib)
+    for _, item in pairs(lib) do
+        item.Visible = state
+    end
+end
+
+local function ESP(plr)
+    local library = {
+        tracer = NewLine(Settings.Tracer_Thickness, Settings.Tracer_Color),
+        box = NewQuad(Settings.Box_Thickness, Settings.Box_Color),
+        healthbar = NewLine(3, Color3.fromRGB(0, 0, 0)),
+        greenhealth = NewLine(1.5, Color3.fromRGB(0, 255, 0))
+    }
+
+    local function UpdateESP()
+        local connection
+        connection = game:GetService("RunService").RenderStepped:Connect(function()
+            if plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character:FindFirstChild("HumanoidRootPart") then
+                local HumPos, OnScreen = camera:WorldToViewportPoint(plr.Character.HumanoidRootPart.Position)
+                if OnScreen then
+                    local head = camera:WorldToViewportPoint(plr.Character.Head.Position)
+                    local DistanceY = math.clamp((Vector2.new(head.X, head.Y) - Vector2.new(HumPos.X, HumPos.Y)).magnitude, 2, math.huge)
+
+                    library.box.PointA = Vector2.new(HumPos.X + DistanceY, HumPos.Y - DistanceY * 2)
+                    library.box.PointB = Vector2.new(HumPos.X - DistanceY, HumPos.Y - DistanceY * 2)
+                    library.box.PointC = Vector2.new(HumPos.X - DistanceY, HumPos.Y + DistanceY * 2)
+                    library.box.PointD = Vector2.new(HumPos.X + DistanceY, HumPos.Y + DistanceY * 2)
+
+                    Visibility(true, library)
+                else
+                    Visibility(false, library)
+                end
+            else
+                Visibility(false, library)
+                if game.Players:FindFirstChild(plr.Name) == nil then
+                    connection:Disconnect()
+                end
+            end
+        end)
+    end
+    coroutine.wrap(UpdateESP)()
+end
+
+for _, v in pairs(game:GetService("Players"):GetPlayers()) do
+    if v ~= Player then
+        coroutine.wrap(ESP)(v)
+    end
+end
+
+game.Players.PlayerAdded:Connect(function(newplr)
+    if newplr ~= Player then
+        coroutine.wrap(ESP)(newplr)
     end
 end)
