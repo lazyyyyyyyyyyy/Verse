@@ -1,0 +1,17 @@
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton
+
+class ESPOverlay(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+
+    def initUI(self):
+        layout = QVBoxLayout()
+        self.toggle_esp = QPushButton("Toggle ESP", self)
+        layout.addWidget(self.toggle_esp)
+        self.setLayout(layout)
+
+app = QApplication([])
+window = ESPOverlay()
+window.show()
+app.exec_()
