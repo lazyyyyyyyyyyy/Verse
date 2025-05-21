@@ -1,0 +1,31 @@
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+-- Create the GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = PlayerGui
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Parent = ScreenGui
+ToggleButton.Size = UDim2.new(0, 150, 0, 50)
+ToggleButton.Position = UDim2.new(0, 10, 0, 10)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.Text = "Toggle ESP"
+
+local ESPEnabled = true
+ToggleButton.MouseButton1Click:Connect(function()
+    ESPEnabled = not ESPEnabled
+    ToggleButton.Text = ESPEnabled and "ESP ON" or "ESP OFF"
+end)
+
+-- Toggle GUI visibility with "Insert" key
+local GuiVisible = true
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.Insert then
+        GuiVisible = not GuiVisible
+        ScreenGui.Enabled = GuiVisible
+    end
+end)
